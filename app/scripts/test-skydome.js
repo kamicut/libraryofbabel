@@ -1,5 +1,6 @@
 var Babel = Babel || {};
 // 'use strict';
+var particleSystem, systems;
 
 Babel.Audio = {
 
@@ -128,23 +129,30 @@ function init() {
 	//create clock
 	clock = new THREE.Clock(true);
 
-	// create hexgon
+  	// create hexgon
 	hexagon =  Hexagon(120, 50, 0,0, THREE);
 	hexagon.rotation.z = 0.523598776;
 	
 	scene.add(hexagon);
 
-	//Create particle system
+	//create particles 
+	systems = [];
 	var particles = new THREE.Geometry;
-	for (var p = 0; p <4000; p++) {
-		var particle = new THREE.Vector3(Math.random() * 500 - 250, Math.random() * 500 - 250, Math.random() * 500 - 550);
-		var particle2 = new THREE.Vector3(Math.random() * 500 - 250, Math.random() * 500 - 250, Math.random() * 500);
+	for (var p = 0; p <5000; p++) {
+		var particle = new THREE.Vector3(Math.random() * 2000+100, Math.random() * 2000-1000, Math.random() * 2000 -1000);
 		particles.vertices.push(particle);
-		particles.vertices.push(particle2);
 	}
-	particleMaterial = new THREE.ParticleBasicMaterial({ color: 0xeeeeee, size: 2 });
-	particleSystem = new THREE.ParticleSystem(particles, particleMaterial);
-	scene.add(particleSystem);
+	for (var i = 0; i < 10; i++) {
+		particleMaterial = new THREE.ParticleBasicMaterial({ color: 0xeeeeee, size: 2 });
+		particleSystem = new THREE.ParticleSystem(particles, particleMaterial);
+		console.log(particleSystem);
+		particleSystem.rotation.set(0,
+                            0,
+                            i);
+		i %2 == 0 ? particleSystem.position.z -= 1000 : particleSystem.position.z += 1000
+		systems.push(particleSystem);
+		scene.add(particleSystem);
+	}
 
 	renderer = new THREE.WebGLRenderer({alpha:true});
 	renderer.setClearColor( 0x000000, 0 ); // the default
@@ -203,7 +211,11 @@ function onWindowResize() {
 function render() {
 	var timer = 0.0001 * Date.now();
 	var delta = clock.getDelta();
-	particleSystem.rotation.z += delta*0.02;
+	if (systems) {
+		systems.forEach(function(particleSystem) {
+			particleSystem.rotation.z += delta*0.02;
+		})
+	}
 	renderer.render( scene, camera );
 };
 
@@ -254,7 +266,9 @@ var animateTurn = function(time){
 		// lookAt.applyMatrix4( matrix );
 		
 		hexagon.rotation.z =  mult* 1.04719755*side + Math.PI/180*90 ;
-		particleSystem.rotation.z += mult* 1.04719755*side + Math.PI/180*90 ;
+		systems.forEach(function(particleSystem) {
+			particleSystem.rotation.z += mult* 1.04719755*side + Math.PI/180*90 ;
+		})
 		if (turns[0] == 1){
 			side = (side-1)
 			if (side==-1) side=5
